@@ -31,23 +31,3 @@ class StaticDataSerializer(serializers.Serializer):
     factor = ObservationFactorSerializer()
     category = ObservationCategorySerializer()
     status = ObservationStatus()
-
-
-class BaseObservationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ReportObservation
-        exclude = ('created_at', 'updated_at')
-
-
-class CreateObservationSerializer(BaseObservationSerializer):
-    pass
-
-
-class BaseReportSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = InspectionReport
-        exclude = ('created_at', 'updated_at')
-
-
-class CreateReportSerializer(BaseReportSerializer):
-    pass
