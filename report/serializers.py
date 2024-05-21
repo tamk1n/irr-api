@@ -31,3 +31,9 @@ class StaticDataSerializer(serializers.Serializer):
     factor = ObservationFactorSerializer()
     category = ObservationCategorySerializer()
     status = ObservationStatus()
+
+
+class ReportAPISerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InspectionReport
+        fields = '__all__'
