@@ -9,7 +9,6 @@ logger = logging.getLogger('django')
 
 def custom_exception_handler(exc, context):
     response = exception_handler(exc, context)
-
     # Check if it's a validation error
     if isinstance(exc, ValidationError):
         logger.warning(f"Bad request to {context['request'].path}: {response.data}")
