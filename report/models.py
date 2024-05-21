@@ -9,6 +9,7 @@ class InspectionReport(BaseModel):
     project = models.TextField()
     division = models.ForeignKey('division.Division', on_delete=models.CASCADE, related_name='reports')
     field = models.ForeignKey('division.DivisionField', on_delete=models.CASCADE, related_name='reports')
+    issued_by = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='observations')
     responsible_person = models.CharField(max_length=155)
     issue_date = models.DateField(auto_now=True)
 
@@ -22,7 +23,6 @@ class ReportObservation(BaseModel):
     reference_doc = models.CharField(max_length=155)
     category = models.ForeignKey('ObservationCategory', on_delete=models.CASCADE, related_name='observations')
     factor = models.ForeignKey('ObservationFactor', on_delete=models.CASCADE, related_name='observations')
-    issued_by = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='observations')
     type = models.ForeignKey('ObservationType', on_delete=models.CASCADE, related_name='observations')
     status = models.ForeignKey('ObservationStatus', on_delete=models.CASCADE, related_name='observations')
     action = models.TextField()
