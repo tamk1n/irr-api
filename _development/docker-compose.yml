@@ -3,13 +3,14 @@ version: '3.8'
 services:
   irr:
     build: .
-    command: sh -c "python manage.py makemigrations &&
-                    python manage.py migrate &&
-                    gunicorn --bind :8000 irr_api.wsgi:application --reload"
+    command: sh -c "python manage.py makemigrations && python manage.py migrate && gunicorn --bind :8000 irr_api.wsgi:application --reload"
+    # command: sh -c "python manage.py makemigrations && python manage.py migrate && python ./venv/lib/python3.10/site-packages/debugpy --wait-for-client --listen 0.0.0.0:3000 ./manage.py runserver 0.0.0.0:8000"
     volumes:
       - ..:/usr/src/app/
+      - logs_volume:/usr/src/app/logs/
     ports:
       - 8000:8000
+      - 3000:3000
     env_file:
       - ../.env.dev
     depends_on:
@@ -25,3 +26,4 @@ services:
 
 volumes:
   postgres_data:
+  logs_volume:

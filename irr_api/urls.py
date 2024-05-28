@@ -30,6 +30,6 @@ urlpatterns = [
         path('auth/', include('auth.urls')),
         path('user-position/', include('user_position.urls')),
         path('report/', include('report.urls')),
-        # path('login/', UserLoginAPIView.as_view(), name="token")
+        path('company/', include('division.urls')),
     ]))
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

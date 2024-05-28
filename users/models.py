@@ -37,4 +37,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
+class UserProfile(models.Model):
+    user = models.OneToOneField('User', on_delete=models.CASCADE, related_name='my_profile')
+    company = models.ForeignKey('division.Company', on_delete=models.CASCADE, related_name='employees')
 
+    def __str__(self):
+        return f'{self.user.first_name} {self.user.last_name}'
