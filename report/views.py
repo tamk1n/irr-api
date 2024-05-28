@@ -8,6 +8,7 @@ from .serializers import *
 import logging
 
 logger = logging.getLogger("django")
+
 class ObservationStaticDataAPIView(APIView):
     def get(self, request):
         response = dict()
