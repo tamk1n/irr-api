@@ -33,7 +33,49 @@ class StaticDataSerializer(serializers.Serializer):
     status = ObservationStatus()
 
 
-class ReportAPISerializer(serializers.ModelSerializer):
+class ObservationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReportObservation
+        fields = ['id', 'report', 'content', 'type', 'status']
+    
+
+class ObservationDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReportObservation
+        fields = ['id', 'report', 'content', 'reference_doc', 'category', 'factor', 'type', 'status', 'action', 'deadline', 'close_date']      
+
+
+class ObservationReadSerializer(ObservationDetailSerializer):
+    category = ObservationCategorySerializer()
+    factor = ObservationFactorSerializer()
+    type = ObservationTypeSerializer()
+    status = ObservationStatusSerializer()
+
+
+
+class InspectionReportDetailSerializer(serializers.ModelSerializer):
+    observations = ObservationDetailSerializer(many=True, read_only=True)
+
     class Meta:
         model = InspectionReport
+        fields = ['id', 'project', 'division', 'field', 'issue_date', 'issued_by', 'observations']
+
+
+class InspectionReportSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = InspectionReport
+        fields = ['id', 'project', 'division', 'field', 'issue_date', 'issued_by']
+        read_only_fields = ['issued_by']
+
+    
+    def create(self, validated_data):
+        validated_data = {'issued_by': self.context['request'].user, **validated_data}
+        instance = InspectionReport.objects.create(**validated_data)
+        return instance
+
+
+class ObservationEvidenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ObservationEvidence
         fields = '__all__'
