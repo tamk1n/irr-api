@@ -1,13 +1,16 @@
-from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
 from .models import *
 from .serializers import *
-import logging
+from .permissions import *
+from division.models import *
+from users.models import *
 
-logger = logging.getLogger("django")
 
 class ObservationStaticDataAPIView(APIView):
     def get(self, request):
@@ -27,14 +30,160 @@ class ObservationStaticDataAPIView(APIView):
 
 
 class ReportAPIView(APIView):
+    paginator = PageNumberPagination()
+
     def get(self, request):
-        queryset = InspectionReport.objects.filter(is_active=True)
-        serializer = ReportAPISerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            company = request.user.my_profile.company
+        except UserProfile.DoesNotExist():
+            raise NotFound('Company not found!')
+        divisions = company.divisions.all()
+        queryset = InspectionReport.objects.filter(is_active=True, division__in=divisions)
+        queryset = self.paginator.paginate_queryset(queryset, request)
+        serializer = InspectionReportSerializer(queryset, many=True)
+        return self.paginator.get_paginated_response(serializer.data)
 
     def post(self, request):
-        serializer = ReportAPISerializer(data=request.data, context={'request': request})
+        serializer = InspectionReportSerializer(data=request.data, context={'request': request})
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ReportDetailView(APIView):
+    permission_classes = (IsAuthenticated, IsReportOwner)
+    def get_object(self, report_id):
+        try:
+            report = InspectionReport.objects.get(id=report_id)
+            self.check_object_permissions(self.request, report)
+            return report
+        except InspectionReport.DoesNotExist:
+            raise NotFound(f'Inspection report for ID {report_id} not found')
+
+    def get(self, request, report_id):
+        report = self.get_object(report_id)
+        serializer = InspectionReportDetailSerializer(report)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def patch(self, request, report_id):
+        report = self.get_object(report_id)
+        serializer = InspectionReportSerializer(report, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, report_id):
+        report = self.get_object(report_id)
+        report.delete()
+        return Response(f'Division field object deleted for given id: {report_id}', status=status.HTTP_204_NO_CONTENT)
+    
+
+class ObservationAPIView(APIView):
+    paginator = PageNumberPagination()
+    permission_classes = (IsAuthenticated, IsObsOwner)
+
+    def get_object(self, report_id):
+        try:
+            report = InspectionReport.objects.get(id=report_id)
+            self.check_object_permissions(self.request, report)
+            return report
+        except InspectionReport.DoesNotExist:
+            raise NotFound(f'Inspection report for ID {report_id} not found')
+
+    def get(self, request, report_id):
+        report = self.get_object(report_id)
+        queryset = ReportObservation.objects.filter(report=report)
+        queryset = self.paginator.paginate_queryset(queryset, request)
+        serializer = ObservationSerializer(queryset, many=True)
+        return self.paginator.get_paginated_response(serializer.data)
+
+    def post(self, request):
+        serializer = ObservationDetailSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class ObservationDetailView(APIView):
+    permission_classes = (IsAuthenticated, IsObsOwner)
+    def get_object(self, obs_id):
+        try:
+            obs = ReportObservation.objects.get(id=obs_id)
+            self.check_object_permissions(self.request, obs)
+            return obs
+        except ReportObservation.DoesNotExist:
+            raise NotFound(f'Observation for ID {obs_id} not found')
+        
+    def get(self, request, obs_id):
+        obs = self.get_object(obs_id)
+        serializer = ObservationReadSerializer(obs)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def patch(self, request, obs_id):
+        obs = self.get_object(obs_id)
+        serializer = ObservationDetailSerializer(obs, data=request.data, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, obs_id):
+        obs = self.get_object(obs_id)
+        obs.delete()
+        return Response(f'Division field object deleted for given id: {obs_id}', status=status.HTTP_204_NO_CONTENT)
+
+
+class ObservationEvidenceAPIView(APIView):
+    permission_classes = (IsAuthenticated, IsObsOwner)
+
+    def get_object(self, obs_id):
+        try:
+            obs = ReportObservation.objects.get(id=obs_id)
+            self.check_object_permissions(self.request, obs)
+            return obs
+        except ReportObservation.DoesNotExist:
+            raise NotFound(f'Observation for ID {obs_id} not found')
+        
+    def get(self, request, obs_id):
+        obs = self.get_object(obs_id)
+        serializer = ObservationEvidenceSerializer(obs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def post(self, request):
+        serializer = ObservationEvidenceSerializer(request.data)
+
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ObservationEvidenceDetailView(APIView):
+    def get_object(self, evd_id):
+        try:
+            evidence = ObservationEvidence.objects.get(id=evd_id)
+            self.check_object_permissions(self.request, evidence)
+            return evidence
+        except ReportObservation.DoesNotExist:
+            raise NotFound(f'Observation evidence for ID {evd_id} not found')
+    
+    def get(self, request, evd_id):
+        evidence = self.get_object(evd_id)
+        serializer = ObservationEvidenceSerializer(evidence)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request, evd_id):
+        evidence = self.get_object(evd_id)
+        serializer = ObservationEvidenceSerializer(evidence, data=request.data, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, evd_id):
+        evidence = self.get_object(evd_id)
+        evidence.delete()
+        return Response(f'Division field object deleted for given id: {evd_id}', status=status.HTTP_204_NO_CONTENT)
