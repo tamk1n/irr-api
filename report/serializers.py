@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import *
+from division.serializers import *
+from users.serializers import *
 
 
 class ObservationTypeSerializer(serializers.ModelSerializer):
@@ -55,17 +57,20 @@ class ObservationReadSerializer(ObservationDetailSerializer):
 
 class InspectionReportDetailSerializer(serializers.ModelSerializer):
     observations = ObservationDetailSerializer(many=True, read_only=True)
+    division = DivisionSerializer()
+    field = DivisionFieldSerializer()
+    issued_by = ReadUserSerializer()
 
     class Meta:
         model = InspectionReport
-        fields = ['id', 'project', 'division', 'field', 'issue_date', 'issued_by', 'observations']
+        fields = ['id', 'project', 'division', 'field', 'issue_date', 'issued_by', 'observations', 'responsible_person']
 
 
 class InspectionReportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InspectionReport
-        fields = ['id', 'project', 'division', 'field', 'issue_date', 'issued_by']
+        fields = ['id', 'project', 'division', 'field', 'issue_date', 'issued_by', 'responsible_person']
         read_only_fields = ['issued_by']
 
     

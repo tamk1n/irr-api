@@ -1,16 +1,18 @@
 from rest_framework.views import APIView
+from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import status
 
 from .models import *
 from .serializers import *
 from .permissions import *
+from .filters import *
 from division.models import *
 from users.models import *
-
 
 class ObservationStaticDataAPIView(APIView):
     def get(self, request):
@@ -29,19 +31,27 @@ class ObservationStaticDataAPIView(APIView):
         return Response(response, status=status.HTTP_200_OK)
 
 
-class ReportAPIView(APIView):
-    paginator = PageNumberPagination()
+class ReportAPIView(GenericAPIView):
+    pagination_class = PageNumberPagination
+    filter_backends = [SearchFilter, OrderingFilter, DjangoFilterBackend]
+    filterset_class = ReportFilter
+    search_fields = ['project']
+    ordering_fields = ['id', 'division__name']
 
     def get(self, request):
         try:
             company = request.user.my_profile.company
         except UserProfile.DoesNotExist():
             raise NotFound('Company not found!')
+        
         divisions = company.divisions.all()
         queryset = InspectionReport.objects.filter(is_active=True, division__in=divisions)
-        queryset = self.paginator.paginate_queryset(queryset, request)
+        filtered_queryset = self.filter_queryset(queryset=queryset)
+        queryset = self.paginate_queryset(filtered_queryset)
         serializer = InspectionReportSerializer(queryset, many=True)
-        return self.paginator.get_paginated_response(serializer.data)
+
+        return self.get_paginated_response(serializer.data)
+
 
     def post(self, request):
         serializer = InspectionReportSerializer(data=request.data, context={'request': request})
@@ -80,8 +90,12 @@ class ReportDetailView(APIView):
         return Response(f'Division field object deleted for given id: {report_id}', status=status.HTTP_204_NO_CONTENT)
     
 
-class ObservationAPIView(APIView):
-    paginator = PageNumberPagination()
+class ObservationAPIView(GenericAPIView):
+    pagination_class = PageNumberPagination
+    filter_backends = [SearchFilter, OrderingFilter, DjangoFilterBackend]
+    filterset_class = ObservationFilter
+    search_fields = ['content']
+    ordering_fields = ['id', 'division__name']    
     permission_classes = (IsAuthenticated, IsObsOwner)
 
     def get_object(self, report_id):
@@ -95,10 +109,13 @@ class ObservationAPIView(APIView):
     def get(self, request, report_id):
         report = self.get_object(report_id)
         queryset = ReportObservation.objects.filter(report=report)
-        queryset = self.paginator.paginate_queryset(queryset, request)
-        serializer = ObservationSerializer(queryset, many=True)
-        return self.paginator.get_paginated_response(serializer.data)
 
+        filtered_queryset = self.filter_queryset(queryset=queryset)
+        queryset = self.paginator.paginate_queryset(filtered_queryset, request)
+        serializer = ObservationSerializer(queryset, many=True)
+        
+        return self.paginator.get_paginated_response(serializer.data)
+    
     def post(self, request):
         serializer = ObservationDetailSerializer(data=request.data, context={'request': request})
         if serializer.is_valid(raise_exception=True):
