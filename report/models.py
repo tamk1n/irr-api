@@ -11,7 +11,7 @@ class InspectionReport(BaseModel):
     field = models.ForeignKey('division.DivisionField', on_delete=models.CASCADE, related_name='reports')
     issued_by = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='observations')
     responsible_person = models.CharField(max_length=155)
-    issue_date = models.DateField(auto_now=True)
+    issue_date = models.DateField()
 
     def __str__(self):
         return f'IR Number {self.id}'
