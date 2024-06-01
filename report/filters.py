@@ -64,16 +64,3 @@ class ObservationFilter(filters.FilterSet):
             'deadline': ['exact'],
             'close_date': ['exact']
         }
-
-    def filter_by_observations_count(self, queryset, name, value):
-        queryset = queryset.annotate(observations_count=Count('observations'))
-        fields = self.get_fields()
-
-        if name == 'observations_count':
-            return queryset.filter(observations_count=value)
-        elif name == 'observations_count__gte':
-            return queryset.filter(observations_count__gte=value)
-        elif name == 'observations_count__lte':
-            return queryset.filter(observations_count__lte=value)
-        else:
-            return queryset
