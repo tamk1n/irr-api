@@ -19,15 +19,15 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import (TokenObtainPairView,TokenRefreshView,)
-from auth.views import UserLoginView
+from user_auth.views import UserLoginView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/token/', UserLoginView.as_view(), name='access-token'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='refresh-token'),
+    path('auth/', include('user_auth.urls')),
     path('api/v1/', include([
         path('users/', include('users.urls')),
-        path('auth/', include('auth.urls')),
         path('user-position/', include('user_position.urls')),
         path('report/', include('report.urls')),
         path('company/', include('division.urls')),

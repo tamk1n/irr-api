@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'user_position',
     'division',
     'report',
+    'user_auth',
     # third-party packages
     'rest_framework',
     'rest_framework_simplejwt',
