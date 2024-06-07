@@ -1,4 +1,4 @@
-from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from user_position.serializers import UserPositionSerializer
 from .models import UserProfile
@@ -6,7 +6,7 @@ from .models import UserProfile
 User = get_user_model()
 
 
-class BaseUserSerializer(ModelSerializer):
+class BaseUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'first_name', 'last_name', 'email', 'position']
@@ -34,9 +34,8 @@ class WriteUserSerializer(BaseUserSerializer):
         return user
 
 
-class UserProfileSerializer(ModelSerializer):
+class UserProfileSerializer(serializers.ModelSerializer):
     user = ReadUserSerializer()
     class Meta:
         model = UserProfile
         fields = ['user']
-
