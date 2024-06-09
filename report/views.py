@@ -182,7 +182,8 @@ class ObservationEvidenceDetailView(APIView):
     def get_object(self, evd_id):
         try:
             evidence = ObservationEvidence.objects.get(id=evd_id)
-            self.check_object_permissions(self.request, evidence)
+            obs = evidence.observation
+            self.check_object_permissions(self.request, obs)
             return evidence
         except ReportObservation.DoesNotExist:
             raise NotFound(f'Observation evidence for ID {evd_id} not found')
