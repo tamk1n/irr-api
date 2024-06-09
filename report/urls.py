@@ -15,6 +15,7 @@ urlpatterns = [
         path('<int:obs_id>', ObservationDetailView.as_view(), name='ObservationDetailView'),
         path('<int:obs_id>/evidences/', ObservationEvidenceAPIView.as_view(), name='ObservationDetailView'),
     ])),
+    path('evidence/', ObservationEvidenceAPIView.as_view(), name='ObservationDetailView'),
     path('evidence/<int:evd_id>', ObservationEvidenceDetailView.as_view(), name='ObservationEvidenceDetailView')
     
     

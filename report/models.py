@@ -39,7 +39,7 @@ class ReportObservation(BaseModel):
         return super().clean()
 
     def __str__(self):
-        return self.report.__str__() + 'Obs' + self.id
+        return self.report.__str__() + ' Obs' + str(self.id)
 
 
 class ObservationType(models.Model):
@@ -83,3 +83,5 @@ class ObservationEvidence(BaseModel):
     observation = models.ForeignKey('ReportObservation', on_delete=models.CASCADE, related_name='evidences')
     evidence = models.ImageField(upload_to=evidences_path)
 
+    def __str__(self):
+        return f'Obs {self.observation.id} evidence {self.id}'

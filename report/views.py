@@ -165,12 +165,12 @@ class ObservationEvidenceAPIView(APIView):
             raise NotFound(f'Observation for ID {obs_id} not found')
         
     def get(self, request, obs_id):
-        obs = self.get_object(obs_id)
-        serializer = ObservationEvidenceSerializer(obs, many=True)
+        evidences = self.get_object(obs_id).evidences
+        serializer = ObservationEvidenceSerializer(evidences, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     def post(self, request):
-        serializer = ObservationEvidenceSerializer(request.data)
+        serializer = ObservationEvidenceSerializer(data=request.data)
 
         if serializer.is_valid(raise_exception=True):
             serializer.save()
