@@ -8,6 +8,9 @@ services:
     volumes:
       - ..:/usr/src/app/
       - logs_volume:/usr/src/app/logs/
+      - media_volume:/usr/src/app/media/
+    
+    restart: always
     ports:
       - 8000:8000
       - 3000:3000
@@ -27,3 +30,4 @@ services:
 volumes:
   postgres_data:
   logs_volume:
+  media_volume:

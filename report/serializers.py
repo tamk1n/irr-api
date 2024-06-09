@@ -44,14 +44,22 @@ class ObservationSerializer(serializers.ModelSerializer):
 class ObservationDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReportObservation
-        fields = ['id', 'report', 'content', 'reference_doc', 'category', 'factor', 'type', 'status', 'action', 'deadline', 'close_date']      
+        fields = ['id', 'report', 'content', 'reference_doc', 'category', 'factor', 'type', 'status', 'action', 'deadline', 'close_date',
+                  'evidences']
+        read_only_fields = ['evidences']
 
+
+class ObservationEvidenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ObservationEvidence
+        fields = ['id', 'observation', 'evidence']
 
 class ObservationReadSerializer(ObservationDetailSerializer):
     category = ObservationCategorySerializer()
     factor = ObservationFactorSerializer()
     type = ObservationTypeSerializer()
     status = ObservationStatusSerializer()
+    evidences = ObservationEvidenceSerializer(many=True)
 
 
 
@@ -79,8 +87,3 @@ class InspectionReportSerializer(serializers.ModelSerializer):
         instance = InspectionReport.objects.create(**validated_data)
         return instance
 
-
-class ObservationEvidenceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ObservationEvidence
-        fields = '__all__'
