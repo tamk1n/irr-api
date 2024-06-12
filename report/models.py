@@ -9,7 +9,7 @@ class InspectionReport(BaseModel):
     project = models.TextField()
     division = models.ForeignKey('division.Division', on_delete=models.CASCADE, related_name='reports')
     field = models.ForeignKey('division.DivisionField', on_delete=models.CASCADE, related_name='reports')
-    issued_by = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='observations')
+    issued_by = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='reports')
     responsible_person = models.CharField(max_length=155)
     issue_date = models.DateField()
 
@@ -17,6 +17,11 @@ class InspectionReport(BaseModel):
         return f'IR Number {self.id}'
 
 
+class ReportObservationManager(models.Manager):
+    def get_open_obs(self, user):
+        open = ObservationStatus.objects.get(id=1)
+        return self.filter(report__issued_by=user, status=open)
+    
 class ReportObservation(BaseModel):
     report = models.ForeignKey('InspectionReport', on_delete=models.CASCADE, related_name='observations')
     content = models.TextField()
@@ -29,6 +34,8 @@ class ReportObservation(BaseModel):
     deadline = models.DateField()
     close_date = models.DateField(blank=True, null=True)
 
+    objects = ReportObservationManager()
+    
     def clean(self):
         if self.close_date and self.close_date > date.today():
             raise ValidationError('You cannot define close date in future.')

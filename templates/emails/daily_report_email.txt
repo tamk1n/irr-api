@@ -1,0 +1,8 @@
+Sizin gündəlik hesabatınız
+
+{% for observation in observations %}
+ID: {{ observation.id }}
+Content: {{ observation.content }}
+Status: {{ observation.status.name }}
+Created At: {{ observation.created_at }}
+{% endfor %}

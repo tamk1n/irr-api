@@ -18,3 +18,5 @@ class AddEmployeeSerializer(serializers.Serializer):
         """Check if user with requested email already exists"""
         if User.objects.filter(email=data.get('email')).exists():
             raise serializers.ValidationError('This employee is already registered.')
+        
+        return data
