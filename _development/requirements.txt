@@ -9,3 +9,8 @@ djangorestframework-simplejwt
 pillow==10.3.0
 debugpy==1.5.1
 django-filter==24.2
+celery==5.4.0
+redis==5.0.1
+hiredis==2.2.3
+flower==2.0.1
+django-celery-beat

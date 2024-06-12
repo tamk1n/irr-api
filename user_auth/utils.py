@@ -1,6 +1,5 @@
 import os
-from datetime import datetime
-
+from django.utils import timezone
 from django.core.mail import send_mail
 from rest_framework.exceptions import NotFound
 
@@ -16,7 +15,7 @@ class AddEmployee:
     def check_token(self, token):
         try:
             register_token = UserRegisterToken.objects.get(token=token, is_active=True)
-            if register_token.expire_date < datetime.now():
+            if register_token.expire_date < timezone.now():
                 register_token.is_active = False
                 register_token.save()
                 raise NotFound('Token not valid!')

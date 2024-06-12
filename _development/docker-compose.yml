@@ -18,6 +18,55 @@ services:
       - ../.env.dev
     depends_on:
       - db
+  
+  redis:
+    build:
+      context: .
+      dockerfile: Dockerfile.redis
+    restart: "always"
+    env_file: ../.env.dev
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+
+  celery:
+    build: .
+    command: sh -c "celery --app=irr_api worker -l INFO"
+    restart: always
+    volumes:
+      - ..:/usr/src/app
+    env_file: ../.env.dev
+    depends_on:
+      - redis
+      - irr
+  
+  celery-beat:
+    build: .
+    command: sh -c "celery -A irr_api beat -l INFO"
+    restart: always
+    volumes:
+      - ..:/usr/src/app
+    env_file: ../.env.dev
+    depends_on:
+      - redis
+      - irr
+      - celery
+  
+  flower:
+    build: .
+    command: celery --app=irr_api flower
+    restart: always
+    volumes:
+      - ..:/usr/src/app
+    ports:
+      - 5555:5555
+    env_file: ../.env.dev
+    depends_on:
+      - redis
+      - irr
+      - celery
+
   db:
     image: postgres:15
     volumes:
@@ -31,3 +80,4 @@ volumes:
   postgres_data:
   logs_volume:
   media_volume:
+  redis_data:

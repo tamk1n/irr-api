@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'requests',
     'corsheaders',
     'django_filters',
+    'django_celery_beat'
 ]
 
 MIDDLEWARE = [
@@ -88,12 +89,11 @@ CORS_ALLOW_HEADERS = (
 )
 
 ROOT_URLCONF = 'irr_api.urls'
-ROOT_URL_SERVER = 'http://0.0.0.0:8000/'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -164,7 +164,21 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20
 }
 
+# celery configs
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://redis:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_BACKEND", "redis://redis:6379/0")
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
 
+CELERY_BEAT_SCHEDULE = {
+    'add-every-30-seconds':{
+        'task': 'report.tasks.send_daily_report',
+        'schedule': 10.0,
+        'args': []
+    }
+}
+
+# loggings configs
 FORMATTERS = ({
     'verbose': {
         'format': '{levelname} {asctime:s} {name} {threadName} {thread:d} {module} {filename} {lineno:d} {name} {funcName} {process:d} {message}',
@@ -234,9 +248,6 @@ LOGGING = {
     "loggers": LOGGERS[0],
 }
 
-
-LOGIN_URL = '/admin/login/'
-
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
@@ -251,6 +262,7 @@ DATABASES = {
     }
 }
 
+# email configs
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_PORT = 587
@@ -282,9 +294,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Baku'
 
-USE_I18N = True
+# USE_I18N = True
 
 USE_TZ = True
 
