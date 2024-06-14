@@ -44,6 +44,15 @@ class ReportObservation(BaseModel):
             raise ValidationError('Close date cannot be prior to issue date.')
 
         return super().clean()
+    
+    def save(self, *args, **kwargs):
+        closed = ObservationStatus.objects.get(id=2)
+        open = ObservationStatus.objects.get(id=1)
+        if self.status == closed and self.is_active:
+            self.is_active = False
+        elif self.status == open and not self.is_active:
+            self.is_active = True
+        return super().save(self, *args, **kwargs)
 
     def __str__(self):
         return self.report.__str__() + ' Obs' + str(self.id)

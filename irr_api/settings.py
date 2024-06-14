@@ -170,13 +170,17 @@ CELERY_RESULT_BACKEND = os.environ.get("CELERY_BACKEND", "redis://redis:6379/0")
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
 
+from celery.schedules import crontab
+
 CELERY_BEAT_SCHEDULE = {
     'add-every-30-seconds':{
         'task': 'report.tasks.send_daily_report',
-        'schedule': 10.0,
+        'schedule': crontab(hour=9, minute=0, day_of_week='mon-fri'),
         'args': []
     }
 }
+
+
 
 # loggings configs
 FORMATTERS = ({
