@@ -20,3 +20,18 @@ class UserRegisterToken(BaseModel):
 
     def __str__(self) -> str:
         return f'{self.email} {self.token}'
+
+
+class OTP(BaseModel):
+    email = models.EmailField()
+    expire_date = models.DateTimeField()
+    otp = models.CharField(max_length=6)
+    is_active = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.expire_date = datetime.now() + timedelta(minutes=10)
+        return super().save()
+
+    def __str__(self):
+        return f'{self.email} {self.otp}'
