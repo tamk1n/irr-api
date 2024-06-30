@@ -1,7 +1,10 @@
+import os
 import random
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -18,6 +21,7 @@ from users.serializers import ReadUserSerializer, WriteUserSerializer
 from .serializers import AddEmployeeSerializer, OTPSerializer
 from .utils import AddEmployee
 from .models import *
+from .tasks import send_otp_email
 from division.permissions import IsUserManager
 
 
@@ -88,9 +92,11 @@ class SendOTPAPIView(APIView):
         
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            user = User.objects.get(email=serializer.data['email'])
+            send_otp_email.delay(user.full_name, serializer.data['email'],  serializer.data['otp'])
+            return Response({'detail': 'Otp sent to email'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+    
 
 class InvalidateOTPView(APIView):
     permission_classes = (AllowAny,)
@@ -116,12 +122,13 @@ class InvalidateOTPView(APIView):
         
 
 class ResetPasswordAPIView(APIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
+    __is_reset = True
 
     def post(self, request):
         current_password = request.data['currentPassword']
         new_password = request.data['newPassword']
-        if OTP.objects.filter(email=request.user.email, otp=request.data['otp'], is_active=False).first():
+        if self.__is_reset and OTP.objects.filter(email=request.data.get('email'), otp=request.data.get('otp'), is_active=False).first():
             return Response('OTP is incorrect', status=status.HTTP_400_BAD_REQUEST)
 
         if request.user.check_password(current_password):
@@ -134,3 +141,7 @@ class ResetPasswordAPIView(APIView):
             return Response('Password changed successfully', status=status.HTTP_200_OK)
         return Response('Password is incorrect', status=status.HTTP_400_BAD_REQUEST)
     
+
+class ChangePasswordAPIView(ResetPasswordAPIView):
+    permission_classes = (IsAuthenticated,)
+    __is_reset = False
